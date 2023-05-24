@@ -1,0 +1,19 @@
+{
+  "name": "csgostash-scraper",
+  "version": "1.0.0",
+  "description": "Scrape CSGOStash for weapons from collection and cases (excluding knives and gloves). Sorted by collection. Extracts the following for each skin: weapon name, skin name, max float, min float.",
+  "main": "app.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VerduzcoTristan/CSGOStash-Scraper.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tristan Verduzco",
+  "license": "GPLV3",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}
