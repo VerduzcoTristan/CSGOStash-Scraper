@@ -3,57 +3,6 @@ const { fetchHtml } = require('./scrapeUrls');
 const que = require('./requestQue.js');
 
 // Function to extract collection items from HTML content
-// async function extractCollectionItems(html) {
-//     const $ = cheerio.load(html);
-//     const collectionItems = [];
-
-//     const itemElements = $('.col-widen > .well.result-box > h3');
-
-//     // Iterate over each item and extract the details
-//     await itemElements.each(async (index, element) => {
-
-//         const skinUrl = $(element).siblings().find('a:last-child').attr('href');
-//         if (skinUrl.endsWith('?Knives=1') || skinUrl.endsWith('?Gloves=1')) return;
-
-//         que.addRequest(skinUrl, async html => {
-//             collectionItems.push(await scrapeSkin(html));
-
-//             console.log('skin was scraped.')
-//             // This is my problem figure out how to return the collectionItems array
-//             return collectionItems;
-//         });
-//     });
-// }
-
-// async function extractCollectionItems(html) {
-//     const $ = cheerio.load(html);
-//     const collectionItems = [];
-//     const itemElements = $('.col-widen > .well.result-box > h3');
-//     const promises = [];
-
-//     itemElements.each((index, element) => {
-//       const skinUrl = $(element).siblings().find('a:last-child').attr('href');
-//       if (skinUrl.endsWith('?Knives=1') || skinUrl.endsWith('?Gloves=1')) return;
-
-//       const promise = new Promise((resolve) => {
-//         que.addRequest(skinUrl, async (html) => {
-//           const scrapedItem = await scrapeSkin(html);
-//           collectionItems.push(scrapedItem);
-//           console.log('Skin was scraped.');
-//           resolve();
-//         });
-//       });
-
-//       promises.push(promise);
-//     });
-
-//     // Wait for all the promises to resolve
-//     await Promise.all(promises);
-
-//     // Return the collectionItems array
-//     return collectionItems;
-//   }
-
 async function processRequest(html, collectionItems) {
     const scrapedItem = await scrapeSkin(html);
     collectionItems.push(scrapedItem);
@@ -80,11 +29,6 @@ async function extractCollectionItems(html) {
     // Return the collectionItems array
     return collectionItems;
 }
-
-
-
-
-
 
 const rarities = ['Covert', 'Classified', 'Restricted', 'Mil-Spec', 'Industrial Grade', 'Consumer Grade'];
 
