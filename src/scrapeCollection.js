@@ -1,50 +1,107 @@
 const cheerio = require('cheerio');
 const { fetchHtml } = require('./scrapeUrls');
+const que = require('./requestQue.js');
 
 // Function to extract collection items from HTML content
+// async function extractCollectionItems(html) {
+//     const $ = cheerio.load(html);
+//     const collectionItems = [];
+
+//     const itemElements = $('.col-widen > .well.result-box > h3');
+
+//     // Iterate over each item and extract the details
+//     await itemElements.each(async (index, element) => {
+
+//         const skinUrl = $(element).siblings().find('a:last-child').attr('href');
+//         if (skinUrl.endsWith('?Knives=1') || skinUrl.endsWith('?Gloves=1')) return;
+
+//         que.addRequest(skinUrl, async html => {
+//             collectionItems.push(await scrapeSkin(html));
+
+//             console.log('skin was scraped.')
+//             // This is my problem figure out how to return the collectionItems array
+//             return collectionItems;
+//         });
+//     });
+// }
+
+// async function extractCollectionItems(html) {
+//     const $ = cheerio.load(html);
+//     const collectionItems = [];
+//     const itemElements = $('.col-widen > .well.result-box > h3');
+//     const promises = [];
+
+//     itemElements.each((index, element) => {
+//       const skinUrl = $(element).siblings().find('a:last-child').attr('href');
+//       if (skinUrl.endsWith('?Knives=1') || skinUrl.endsWith('?Gloves=1')) return;
+
+//       const promise = new Promise((resolve) => {
+//         que.addRequest(skinUrl, async (html) => {
+//           const scrapedItem = await scrapeSkin(html);
+//           collectionItems.push(scrapedItem);
+//           console.log('Skin was scraped.');
+//           resolve();
+//         });
+//       });
+
+//       promises.push(promise);
+//     });
+
+//     // Wait for all the promises to resolve
+//     await Promise.all(promises);
+
+//     // Return the collectionItems array
+//     return collectionItems;
+//   }
+
+async function processRequest(html, collectionItems) {
+    const scrapedItem = await scrapeSkin(html);
+    collectionItems.push(scrapedItem);
+}
+
 async function extractCollectionItems(html) {
     const $ = cheerio.load(html);
     const collectionItems = [];
-
     const itemElements = $('.col-widen > .well.result-box > h3');
 
-    // Iterate over each item and extract the details
-    await itemElements.each(async (index, element) => {
-        const weaponName = $(element).find('h3 > a:first-child').text().trim();
-        const skinName = $(element).find('h3 > a:last-child').text().trim();
-
+    itemElements.each((index, element) => {
         const skinUrl = $(element).siblings().find('a:last-child').attr('href');
-        if(skinUrl.endsWith('?Knives=1') || skinUrl.endsWith('?Gloves=1')) return;
-        
-        // TODO maybe throttle this or make syncronous
-        const wears = await scrapeWear(skinUrl);
+        if (skinUrl.endsWith('?Knives=1') || skinUrl.endsWith('?Gloves=1')) return;
 
-        const { minWear, maxWear } = wears;
-
-        // Add item details to the collectionItems array
-        collectionItems.push({
-            weaponName,
-            skinName,
-            minWear,
-            maxWear
+        que.addRequest(skinUrl, (html) => {
+            console.log(`Scraping skin: ${skinUrl}`);
+            processRequest(html, collectionItems);
         });
     });
 
+    // Wait for all the requests to complete
+    await que.processQueue();
+
+    // Return the collectionItems array
     return collectionItems;
 }
 
-// Scrape the wear of an item
-async function scrapeWear(url) {
+
+
+
+
+
+const rarities = ['Covert', 'Classified', 'Restricted', 'Mil-Spec', 'Industrial Grade', 'Consumer Grade'];
+
+// Scrape a skin page
+async function scrapeSkin(html) {
+    const $ = cheerio.load(html);
     try {
-        console.log('Scraping wear:', url);
-        const html = await fetchHtml(url);
-        
-        const $ = cheerio.load(html);
+        const weaponName = $('h2 > a').first().text();
+        const skinName = $('h2 > a').last().text();
 
         const minWear = $('.wear-min-value').attr('data-wearmin');
         const maxWear = $('.wear-max-value').attr('data-wearmax');
 
-        return { minWear, maxWear };
+        let rarity = $('.quality .nomargin').text().trim();
+        rarity = rarities.find(type => rarity.startsWith(type))
+
+        return { weaponName, skinName, rarity, minWear, maxWear };
     } catch (error) {
         console.error('Error scraping wear:', error);
         return [];

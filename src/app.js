@@ -1,7 +1,8 @@
 const fs = require('fs');
+const path = require('path');
 const { fetchHtml, extractCollectionUrls } = require('./scrapeUrls');
 const { extractCollectionItems } = require('./scrapeCollection');
-const { throttleRequests } = require('./throttle.js');
+const que = require('./requestQue.js');
 
 // Function to scrape collection URLs
 async function scrapeCollectionUrls() {
@@ -14,18 +15,6 @@ async function scrapeCollectionUrls() {
     }
 }
 
-// Function to scrape a collection and collect weapon and skin names
-async function scrapeCollection(collectionUrl) {
-    try {
-        console.log('Scraping collection:', collectionUrl);
-        const html = await fetchHtml(collectionUrl);
-        return await extractCollectionItems(html);
-    } catch (error) {
-        console.error('Error scraping collection:', error);
-        return [];
-    }
-}
-
 // Main function to orchestrate the scraping process
 async function scrapeCSGOStash() {
     try {
@@ -34,26 +23,38 @@ async function scrapeCSGOStash() {
         const collectionUrls = await scrapeCollectionUrls();
         console.log('Found', collectionUrls.length, 'collection URLs.');
 
-        // Set the maximum number of concurrent colleciton requests
-        const maxConcurrentRequests = 1;
-
         const collections = [];
 
-        // Process collection URLs with throttling
-        await throttleRequests(collectionUrls, maxConcurrentRequests, async (collectionUrl) => {
-            // Scrape the collection and collect weapon and skin names
-            const items = await scrapeCollection(collectionUrl);
-            collections.push({ collectionUrl, items });
+        collectionUrls.forEach((collectionUrl) => {
+            // Add urls to que
+            que.addRequest(collectionUrl, async html => {
+
+                console.log(`Scraping collection: ${collectionUrl}`);
+
+                // Scrape the collection and collect weapon and skin names
+                const items = await extractCollectionItems(html);
+
+                if(!items) console.log('No items found for collection:', collectionUrl)
+
+                const collectionName = collectionUrl.split('/').pop().replaceAll('+', ' ');
+                // Add collection to array
+                collections.push({ collectionUrl, collectionName, items });
+            })
         });
 
-        // TODO format names and get rid of placeholders.
+        // Wait for all requests to finish
+        while(que.isProcessing) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
 
         // Save collections to a file
         fs.writeFile('collections.json', JSON.stringify(collections, null, 2), (error) => {
             if (error) {
                 console.error('Error saving collections to file:', error);
             } else {
-                console.log('Scraping completed. Collections saved to collections.json.');
+                const path = path.join(__dirname, 'collections.json');
+                console.log(`Scraping completed. Collections saved to ${path}`);
             }
         });
 

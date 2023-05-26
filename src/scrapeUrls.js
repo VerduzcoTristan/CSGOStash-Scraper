@@ -38,35 +38,6 @@ function extractCollectionUrls(html) {
     return collectionUrls;
 }
 
-// // Function to extract collection and case URLs from HTML content
-// function extractCollectionUrls(html) {
-//     const $ = cheerio.load(html);
-//     const collectionUrls = [];
-
-//     // Find the navbar element containing URLs
-//     const dropdownMenu = $('.navbar-nav .dropdown-menu');
-
-//     // Find each collection URL within the dropdown menu
-//     const collectionLinks = dropdownMenu.find('a[href^="https://csgostash.com/collection/"]');
-
-//     // Find each case URL within the dropdown menu
-//     const caseLinks = dropdownMenu.find('a[href^="https://csgostash.com/case/"]');
-
-//     // Extract the URLs and add them to the collectionUrls array
-//     collectionLinks.each((index, element) => {
-//         const collectionUrl = $(element).attr('href');
-//         collectionUrls.push(collectionUrl);
-//     });
-
-//         // Extract the URLs and add them to the collectionUrls array
-//         caseLinks.each((index, element) => {
-//             const caseUrl = $(element).attr('href');
-//             collectionUrls.push(caseUrl);
-//         });
-
-//     return collectionUrls;
-// }
-
 module.exports = {
     fetchHtml,
     extractCollectionUrls,
