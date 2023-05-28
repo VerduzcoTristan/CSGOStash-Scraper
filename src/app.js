@@ -53,8 +53,7 @@ async function scrapeCSGOStash() {
             if (error) {
                 console.error('Error saving collections to file:', error);
             } else {
-                const path = path.join(__dirname, 'collections.json');
-                console.log(`Scraping completed. Collections saved to ${path}`);
+                console.log(`Scraping completed. Collections saved to ${path.join(__dirname, 'collections.json')}`);
             }
         });
 
